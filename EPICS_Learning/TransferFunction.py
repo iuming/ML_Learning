@@ -114,8 +114,10 @@ from scipy import signal
 import matplotlib.pyplot as plt
 
 # 定义传递函数
-num = [1]
-den = [1, 1, 1]
+omega = 500
+a = 0.01
+num = [omega*omega]
+den = [1, a*omega, omega*omega]
 
 # 计算频率响应
 w, mag, phase = signal.bode((num, den))
