@@ -1,0 +1,26 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/mnt/hgfs/ShareFiles/RSVISA/main.cpp
+iostream
+-
+visa.h
+-
+
+/usr/include/rsvisa/visa.h
+stdarg.h
+-
+visatype.h
+/usr/include/rsvisa/visatype.h
+
+/usr/include/rsvisa/visatype.h
+limits.h
+-
+sys/types.h
+-
+

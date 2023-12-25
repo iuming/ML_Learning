@@ -1,0 +1,1 @@
+/usr/bin/c++ -g CMakeFiles/RSVISA.dir/main.cpp.o -o RSVISA 
