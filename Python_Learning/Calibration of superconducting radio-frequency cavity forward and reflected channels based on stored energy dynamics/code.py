@@ -1,3 +1,21 @@
+"""
+Calibration methods for SRF cavity accelerating systems. See:
+Bellandi, Andrea, et al. 'Calibration of superconducting
+radio−frequency cavity forward and reflected channels based on stored energy dynamics'
+"""
+
+# Params
+#
+# hbw: Cavity half bandwidth in angular frequency
+# probe_cmplx, vforw_cmplx, vrefl_cmplx: Cavity signal traces in I (real) and Q (imaginary)
+# vforw_cmplx_decay, vrefl_cmplx_decay: Cavity signals at decay
+# probe_sq_deriv: time derivative of the probe square amplitude
+# kadd: tuning parameter
+#
+# The calibration algorithms returns a 4 complex values array with
+#
+# (a, b, c, d) = (arr[0], arr[1], arr[2], arr[3])
+
 import numpy as np
 from scipy.optimize import least_squares, lsq_linear
 
