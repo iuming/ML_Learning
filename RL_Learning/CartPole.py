@@ -16,82 +16,49 @@ Dependencies:
 
 Modifications:
 - 2023/12/12 下午3:13: Initial Create.
+- 2024/04/23 8:54 AM: Update Code
 
 """
 
-import gym
-import numpy as np
-import random
-import tensorflow as tf
-from collections import deque
+import gymnasium as gym
 
-# 创建环境
-env = gym.make('CartPole-v1')
+from stable_baselines3 import PPO
+from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
+from stable_baselines3.common.env_util import make_vec_env
+from stable_baselines3.common.utils import set_random_seed
 
-# 设置随机种子
-seed = 42
-env.seed(seed)
-np.random.seed(seed)
-random.seed(seed)
-tf.random.set_seed(seed)
+def make_env(env_id: str, rank: int, seed: int = 0):
+    """
+    Utility function for multiprocessed env.
 
-# 定义DQN模型
-class DQN(tf.keras.Model):
-    def __init__(self, action_space):
-        super(DQN, self).__init__()
-        self.dense1 = tf.keras.layers.Dense(24, activation='relu')
-        self.dense2 = tf.keras.layers.Dense(24, activation='relu')
-        self.dense3 = tf.keras.layers.Dense(action_space, activation='linear')
+    :param env_id: the environment ID
+    :param num_env: the number of environments you wish to have in subprocesses
+    :param seed: the inital seed for RNG
+    :param rank: index of the subprocess
+    """
+    def _init():
+        env = gym.make(env_id, render_mode="human")
+        env.reset(seed=seed + rank)
+        return env
+    set_random_seed(seed)
+    return _init
 
-    def call(self, inputs):
-        x = self.dense1(inputs)
-        x = self.dense2(x)
-        return self.dense3(x)
+if __name__ == "__main__":
+    env_id = "CartPole-v1"
+    num_cpu = 12  # Number of processes to use
+    # Create the vectorized environment
+    vec_env = SubprocVecEnv([make_env(env_id, i) for i in range(num_cpu)])
 
-# 设置超参数
-gamma = 0.95  # 折扣因子
-epsilon = 1.0  # 探索率
-epsilon_min = 0.01
-epsilon_decay = 0.995
-batch_size = 64
-memory = deque(maxlen=10000)
+    # Stable Baselines provides you with make_vec_env() helper
+    # which does exactly the previous steps for you.
+    # You can choose between `DummyVecEnv` (usually faster) and `SubprocVecEnv`
+    # env = make_vec_env(env_id, n_envs=num_cpu, seed=0, vec_env_cls=SubprocVecEnv)
 
-# 创建DQN模型
-model = DQN(env.action_space.n)
-model.compile(optimizer=tf.keras.optimizers.Adam(), loss='mean_squared_error')
+    model = PPO("MlpPolicy", vec_env, verbose=1)
+    model.learn(total_timesteps=250000)
 
-# 训练DQN模型
-episodes = 1000
-for episode in range(episodes):
-    state = env.reset()
-    state = np.reshape(state, [1, 4])
-    total_reward = 0
-    for time in range(500):
-        # 选择动作
-        if np.random.rand() <= epsilon:
-            action = env.action_space.sample()
-        else:
-            action = np.argmax(model.predict(state))
-        next_state, reward, done, _ = env.step(action)
-        next_state = np.reshape(next_state, [1, 4])
-        total_reward += reward
-        memory.append((state, action, reward, next_state, done))
-        state = next_state
-        if done:
-            break
-        if len(memory) > batch_size:
-            minibatch = random.sample(memory, batch_size)
-            for state, action, reward, next_state, done in minibatch:
-                target = reward
-                if not done:
-                    target = (reward + gamma * np.amax(model.predict(next_state)[0]))
-                target_f = model.predict(state)
-                target_f[0][action] = target
-                model.fit(state, target_f, epochs=1, verbose=0)
-        if epsilon > epsilon_min:
-            epsilon *= epsilon_decay
-
-    print(f"Episode {episode + 1}, Total Reward: {total_reward}")
-
-# 关闭环境
-env.close()
+    obs = vec_env.reset()
+    for _ in range(1000):
+        action, _states = model.predict(obs)
+        obs, rewards, dones, info = vec_env.step(action)
+        vec_env.render()
