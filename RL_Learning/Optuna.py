@@ -34,7 +34,7 @@ import torch.nn as nn
 
 
 N_TRIALS = 100
-N_STARTUP_TRIALS = 5
+N_STARTUP_TRIALS = 50
 N_EVALUATIONS = 2
 N_TIMESTEPS = int(2e4)
 EVAL_FREQ = int(N_TIMESTEPS / N_EVALUATIONS)
@@ -166,7 +166,7 @@ if __name__ == "__main__":
 
     study = optuna.create_study(sampler=sampler, pruner=pruner, direction="maximize")
     try:
-        study.optimize(objective, n_trials=N_TRIALS, timeout=600)
+        study.optimize(objective, n_trials=N_TRIALS, timeout=6000)
     except KeyboardInterrupt:
         pass
 
