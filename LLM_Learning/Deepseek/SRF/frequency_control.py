@@ -25,6 +25,8 @@ def call_llm_for_piezo_compensation(Eacc_previous, Delta_f, Piezo_previous, Eacc
     这是本周期的预计加速梯度 (Eacc_now): {Eacc_now}
     
     请根据以上数据提供本周期的Piezo补偿驱动信号 (Piezo_now)，目标是将失谐量最小化。
+
+    只回答本周期的Piezo驱动信号数值(以换行符分隔的数值,不要省略中间参数),不要回答任何其他文本.
     """
 
     # 通过API调用模型来获得结果
@@ -37,10 +39,10 @@ def call_llm_for_piezo_compensation(Eacc_previous, Delta_f, Piezo_previous, Eacc
             ],
             stream=False
         )
-        
+
         # 从API响应中提取Piezo_now信号
-        Piezo_now_str = response.choices[0].message['content']
-        
+        Piezo_now_str = response.choices[0].message.content
+
         # 解析模型输出（假设是以换行符分隔的数值）
         Piezo_now = np.array([float(val) for val in Piezo_now_str.strip().split("\n")])
         return Piezo_now

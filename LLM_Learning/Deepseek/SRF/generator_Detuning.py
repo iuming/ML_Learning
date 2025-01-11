@@ -2,10 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # 参数定义
-N = 2048  # 信号总样本数
-up_duration = 500  # 上升阶段的样本数
-flat_duration = 800  # 平顶阶段的样本数
-down_duration = 748  # 衰减阶段的样本数
+N = 256  # 信号总样本数
+up_duration = 60  # 上升阶段的样本数
+flat_duration = 90  # 平顶阶段的样本数
+down_duration = 106  # 衰减阶段的样本数
 peak_value = 14  # 峰值
 K_L = -1.48  # 失谐量计算的常数
 
@@ -14,13 +14,13 @@ t = np.arange(N)
 E_acc = np.zeros(N)
 
 # 上升阶段 (0-500)
-E_acc[0:up_duration] = peak_value * (1 - np.exp(-t[0:up_duration] / 80))
+E_acc[0:up_duration] = peak_value * (1 - np.exp(-t[0:up_duration] / 10))
 
 # 平顶阶段 (500-1300)
 E_acc[up_duration:up_duration + flat_duration] = peak_value
 
 # 衰减阶段 (1300-2048)
-E_acc[up_duration + flat_duration:N] = peak_value * np.exp(- (t[up_duration + flat_duration:N] - (up_duration + flat_duration)) / 150)
+E_acc[up_duration + flat_duration:N] = peak_value * np.exp(- (t[up_duration + flat_duration:N] - (up_duration + flat_duration)) / 20)
 
 # 计算失谐量信号 Δf
 Delta_f = K_L * (E_acc ** 2)
