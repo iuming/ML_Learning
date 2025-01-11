@@ -1,3 +1,12 @@
+# Project: SRF
+# File: frequency_control.py
+# Creator: Ming Liu
+# Date: Jan, 11, 2025
+# Description: This script is used to call the Large Language Model (LLM) to generate Piezo compensation drive signals.
+#              The script reads the previous cycle's data (Eacc_previous, Delta_f, Piezo_previous) and the current cycle's expected acceleration gradient (Eacc_now) from files,
+#              calls the LLM to generate the new Piezo drive signal (Piezo_now) based on the input data, and writes the Piezo_now signal to a file.
+
+
 import numpy as np
 from openai import OpenAI
 
