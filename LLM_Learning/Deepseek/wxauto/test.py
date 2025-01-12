@@ -37,7 +37,6 @@ while True:
             # 如果消息类型是"friend"即是来自好友的消息
             if msg_type == "friend":
                 # 调用大模型
-                # message = llm.predict(content)
                 response = client.chat.completions.create(
                     model="deepseek-chat",
                     messages=[
@@ -46,7 +45,6 @@ while True:
                     ],
                     stream=False
                 )
-
-                message = response.choices[0].message.content
                 # 发送消息给当前窗口的好友
+                message = response.choices[0].message.content
                 chat.SendMsg(message)
