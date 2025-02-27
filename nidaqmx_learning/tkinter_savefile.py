@@ -107,6 +107,29 @@ class voltageContinuousInput(tk.Frame):
         # Call back for the "stop task" button
         self.continueRunning = False
 
+    # def saveData(self):
+    #     # Check if there is data to save
+    #     if self.currentData:
+    #         # Open save dialog for user to choose file path and name
+    #         file_path = filedialog.asksaveasfilename(
+    #             defaultextension=".csv",
+    #             filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
+    #             title="Save Data"
+    #         )
+    #         if file_path:  # If user selected a file path
+    #             try:
+    #                 with open(file_path, 'w') as f:
+    #                     for i, channel_data in enumerate(self.currentData):
+    #                         f.write(f"Channel {i}\n")
+    #                         for sample in channel_data:
+    #                             f.write(f"{sample}\n")
+    #                         f.write("\n")
+    #                 messagebox.showinfo("Save Data", "Data saved successfully!")
+    #             except Exception as e:
+    #                 messagebox.showerror("Save Error", f"Error saving data: {str(e)}")
+    #     else:
+    #         messagebox.showwarning("Save Data", "No data available to save!")
+
     def saveData(self):
         # Check if there is data to save
         if self.currentData:
@@ -119,11 +142,11 @@ class voltageContinuousInput(tk.Frame):
             if file_path:  # If user selected a file path
                 try:
                     with open(file_path, 'w') as f:
-                        for i, channel_data in enumerate(self.currentData):
-                            f.write(f"Channel {i}\n")
-                            for sample in channel_data:
-                                f.write(f"{sample}\n")
-                            f.write("\n")
+                        # Write header, listing all channel names
+                        f.write(','.join([f'Channel {i}' for i in range(len(self.currentData))]) + '\n')
+                        # Write data, each row represents a time point, all channels side by side
+                        for row in zip(*self.currentData):
+                            f.write(','.join(map(str, row)) + '\n')
                     messagebox.showinfo("Save Data", "Data saved successfully!")
                 except Exception as e:
                     messagebox.showerror("Save Error", f"Error saving data: {str(e)}")
