@@ -1,3 +1,28 @@
+"""
+Project Name: Voltage Continuous Input Application
+File Name: tkinter_savefile.py
+Author: Liu Ming
+Created Time: February 27th, 2025
+Description:
+This script creates a Tkinter-based GUI application for continuously acquiring voltage data using NI-DAQmx.
+The application allows users to configure channel settings, input settings, start and stop data acquisition,
+and save the acquired data to a CSV file. The acquired data is displayed in real-time using Matplotlib.
+Preparation Before Running:
+1. Ensure NI-DAQmx is installed and properly configured on your system.
+2. Connect the necessary hardware (e.g., NI DAQ device) and verify its connection.
+3. Install required Python packages: nidaqmx, tkinter, matplotlib.
+Running Method:
+1. Run the script using Python: `python tkinter_savefile.py`
+2. Configure the channel and input settings in the GUI.
+3. Click "Start Task" to begin data acquisition.
+4. Click "Stop Task" to stop data acquisition.
+5. Click "Save Data" to save the acquired data to a CSV file.
+Modification Notes:
+- Modified Time: February 27th, 2025
+- Modified By: Liu Ming
+- Modified Notes: Description of changes made.
+"""
+
 import nidaqmx
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
