@@ -1,3 +1,29 @@
+"""
+Project Name: Signal Acquisition Program
+File Name: trigger_GUI.py
+Author: Liu Ming
+Created Time: February 27th, 2025
+
+Description:
+This program provides a graphical user interface (GUI) for signal acquisition using NI-DAQmx. 
+It allows users to configure trigger settings, signal addresses, sampling frequency, and number of samples.
+The acquired data is displayed in a plot and can be saved to a CSV file.
+
+Preparation:
+1. Ensure NI-DAQmx is installed and configured on your system.
+2. Connect the necessary hardware for signal acquisition.
+
+Running the Program:
+1. Run the script using Python: `python trigger_GUI.py`
+2. Enter the required parameters in the GUI.
+3. Click "Start Monitoring" to begin data acquisition.
+4. Click "Save Data" to save the acquired data to a CSV file.
+
+Modification Log:
+- Modified Time: [Date of Modification]
+    Modified Notes: [Description of Modification]
+"""
+
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import nidaqmx
