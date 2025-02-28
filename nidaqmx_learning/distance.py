@@ -1,3 +1,28 @@
+"""
+Project Name: Simple 3D Modeling Tool
+File Name: distance.py
+Author: Liu Ming
+Created Date: Feb 28, 2025
+Description:
+This script implements a simple 3D modeling tool using Tkinter for the GUI and Matplotlib for 3D visualization. 
+It allows users to import a 3D model in STL format, input satellite points with distances, and visualize the model 
+along with the satellite points and their respective target areas.
+Prerequisites:
+- Python 3.x
+- Tkinter
+- Matplotlib
+- numpy-stl
+- numpy
+To run this script:
+1. Ensure all prerequisites are installed.
+2. Update the default model file path in the GUI or input the correct path.
+3. Run the script using the command: python distance.py
+Modification Log:
+- Modified Time: Feb 28, 2025
+- Modified By: Liu Ming
+    Modified Notes: Initial creation of the script.
+"""
+
 import tkinter as tk
 from tkinter import ttk, messagebox
 import matplotlib.pyplot as plt
