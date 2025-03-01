@@ -5,9 +5,10 @@ Author: Liu Ming
 Created Date: Feb 28, 2025
 Description:
 This script implements a simple 3D modeling tool using Tkinter for the GUI and Matplotlib for 3D visualization. 
-It allows users to import a 3D model in STL format, input satellite points with distances, and visualize the model 
-along with the satellite points and their respective target areas. The intersection areas between the model and 
-the spheres around the satellite points are highlighted with a darker color. Zoom functionality is added via buttons.
+It allows users to import a 3D model in STL format, input satellite points with distances, visualize the model 
+along with the satellite points and their respective target areas, and export the model to an STL file.
+The intersection areas between the model and the spheres around the satellite points are highlighted with a darker color.
+Zoom functionality is added via buttons.
 Prerequisites:
 - Python 3.x
 - Tkinter
@@ -28,6 +29,9 @@ Modification Log:
 - Modified Time: Mar 1, 2025
 - Modified By: Liu Ming
     Modified Notes: Added zoom functionality with buttons for enhanced interaction.
+- Modified Time: Mar 1, 2025
+- Modified By: Liu Ming
+    Modified Notes: Added functionality to export the model to an STL file.
 """
 
 import tkinter as tk
@@ -124,6 +128,14 @@ class SimpleModelingApp:
         ttk.Label(left_frame, text="Zoom Controls").pack(pady=5)
         ttk.Button(left_frame, text="Zoom In", command=self.zoom_in).pack(pady=2)
         ttk.Button(left_frame, text="Zoom Out", command=self.zoom_out).pack(pady=2)
+
+        # **新增：导出模型部分**
+        ttk.Label(left_frame, text="Export Model").pack(pady=5)
+        ttk.Label(left_frame, text="Export File Path:").pack()
+        self.export_path = ttk.Entry(left_frame, width=15)
+        self.export_path.insert(0, "exported_model.stl")  # 默认导出路径
+        self.export_path.pack(pady=2)
+        ttk.Button(left_frame, text="Export Model", command=self.export_model).pack(pady=10)
 
         # 右侧3D视图区域
         self.fig = plt.Figure(figsize=(5, 4))
@@ -296,6 +308,28 @@ class SimpleModelingApp:
         self.ax.set_ylim(new_ylim)
         self.ax.set_zlim(new_zlim)
         self.canvas.draw()
+
+    # **新增：导出模型方法**
+    def export_model(self):
+        """导出当前模型为STL文件"""
+        if not self.model_data:
+            messagebox.showerror("Error", "No model to export! Please import a model first.")
+            return
+
+        file_path = self.export_path.get()
+        try:
+            vertices, faces = self.model_data
+            # 创建STL mesh对象
+            model_mesh = mesh.Mesh(np.zeros(faces.shape[0], dtype=mesh.Mesh.dtype))
+            for i, face in enumerate(faces):
+                for j in range(3):
+                    model_mesh.vectors[i][j] = vertices[face[j], :]
+
+            # 保存为STL文件
+            model_mesh.save(file_path)
+            messagebox.showinfo("Success", f"Model exported to {file_path}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to export model: {str(e)}")
 
 if __name__ == "__main__":
     root = tk.Tk()
