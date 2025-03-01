@@ -6,7 +6,8 @@ Created Date: Feb 28, 2025
 Description:
 This script implements a simple 3D modeling tool using Tkinter for the GUI and Matplotlib for 3D visualization. 
 It allows users to import a 3D model in STL format, input satellite points with distances, and visualize the model 
-along with the satellite points and their respective target areas.
+along with the satellite points and their respective target areas. The intersection areas between the model and 
+the spheres around the satellite points are highlighted with a darker color.
 Prerequisites:
 - Python 3.x
 - Tkinter
@@ -21,6 +22,9 @@ Modification Log:
 - Modified Time: Feb 28, 2025
 - Modified By: Liu Ming
     Modified Notes: Initial creation of the script.
+- Modified Time: Mar 1, 2025
+- Modified By: Liu Ming
+    Modified Notes: Added functionality to highlight intersection areas with a darker color.
 """
 
 import tkinter as tk
@@ -54,7 +58,7 @@ class SimpleModelingApp:
         ttk.Label(left_frame, text="Import Model").pack(pady=5)
         ttk.Label(left_frame, text="Model File Path:").pack()
         self.model_path = ttk.Entry(left_frame, width=15)
-        self.model_path.insert(0, "model.stl")  # 默认值，需替换为实际路径
+        self.model_path.insert(0, "nidaqmx_learning\open3d\BareCavity.STL") # 默认路径
         self.model_path.pack(pady=2)
         ttk.Button(left_frame, text="Import Model", command=self.import_model).pack(pady=10)
 
@@ -159,13 +163,39 @@ class SimpleModelingApp:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to load model: {str(e)}")
 
+    def is_inside_all_spheres(self, vertex, centers, radii):
+        """检查顶点是否在所有球体内"""
+        for center, radius in zip(centers, radii):
+            if np.linalg.norm(vertex - center) > radius:
+                return False
+        return True
+
     def redraw_scene(self):
         self.ax.clear()
 
         # 绘制导入的模型
         if self.model_data:
             vertices, faces = self.model_data
-            self.ax.plot_trisurf(vertices[:, 0], vertices[:, 1], faces, vertices[:, 2], color='blue', alpha=0.8)
+            if self.points_data and all(d is not None for d in self.distances):
+                # 计算相交区域
+                centers = np.array(self.points_data)
+                radii = np.array(self.distances)
+                inside = [self.is_inside_all_spheres(v, centers, radii) for v in vertices]
+                inside_indices = np.where(inside)[0]
+                outside_indices = np.where(~np.array(inside))[0]
+
+                # 绘制相交区域（颜色加深）
+                if len(inside_indices) > 0:
+                    self.ax.plot_trisurf(vertices[inside_indices, 0], vertices[inside_indices, 1], 
+                                         faces, vertices[inside_indices, 2], color='darkblue', alpha=0.8)
+
+                # 绘制非相交区域
+                if len(outside_indices) > 0:
+                    self.ax.plot_trisurf(vertices[outside_indices, 0], vertices[outside_indices, 1], 
+                                         faces, vertices[outside_indices, 2], color='blue', alpha=0.8)
+            else:
+                # 无目标区域时正常绘制模型
+                self.ax.plot_trisurf(vertices[:, 0], vertices[:, 1], faces, vertices[:, 2], color='blue', alpha=0.8)
 
         # 绘制卫星点
         if self.points_data:
