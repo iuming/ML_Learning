@@ -21,8 +21,9 @@ Usage:
 
 Modification Log:
 - March 4th, 2025: Initial creation by Liu Ming
-- YYYY-MM-DD: [Modification Notes]
+- March 4th, 2025: Added error handling in fetch_data function and improved datetime formatting in load_data method
 """
+
 import mysql.connector
 import tkinter as tk
 from tkinter import ttk
@@ -58,17 +59,28 @@ class DatabaseGUI:
         self.root.title("VerticalTest Database Viewer")
         self.root.geometry("1200x600")
 
+        # Get column names
+        columns = self.get_columns()
+
         # Create table
-        self.tree = ttk.Treeview(self.root, columns=self.get_columns(), show="headings")
-        self.tree.pack(fill=tk.BOTH, expand=True)
+        self.tree = ttk.Treeview(
+            self.root,
+            columns=columns,
+            show="headings",
+            height=20
+        )
+        self.tree.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
         # Add scrollbar
-        self.scrollbar = ttk.Scrollbar(self.tree, orient="vertical", command=self.tree.yview)
+        self.scrollbar = ttk.Scrollbar(
+            self.tree,
+            orient="vertical",
+            command=self.tree.yview
+        )
         self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.tree.configure(yscrollcommand=self.scrollbar.set)
 
         # Add table headers
-        columns = self.get_columns()
         for col in columns:
             self.tree.heading(col, text=col)
             self.tree.column(col, width=100)
@@ -77,11 +89,11 @@ class DatabaseGUI:
         self.load_data()
 
     def get_columns(self):
-        # Table headers (assuming table name and column names are known)
+        # Use column names consistent with the database table fields
         return [
-            "id", "Pin", "Pr", "Pt", "Q0", "Eacc", "Qin", "Qt", 
-            "QL", "Q0_initial", "R_Q", "Leff", "Ep_Eacc", "Bp_Eacc", 
-            "Time", "Radiation1", "Radiation2", "Radiation3", 
+            "id", "Pin", "Pr", "Pt", "Q0", "Eacc", "Qin", "Qt",
+            "QL", "Q0_initial", "R_Q", "Leff", "Ep_Eacc", "Bp_Eacc",
+            "Time", "Radiation1", "Radiation2", "Radiation3",
             "Temperature1", "Temperature2", "Temperature3"
         ]
 
@@ -92,10 +104,21 @@ class DatabaseGUI:
 
         # Fetch data
         rows = fetch_data()
-        for row in rows:
-            # Format Time column as string
-            formatted_time = row[13].strftime("%Y-%m-%d %H:%M:%S")
-            self.tree.insert("", "end", values=row[:13] + (formatted_time,) + row[14:])
+        for row_data in rows:
+            # Format time field
+            formatted_time = self.convert_to_datetime(row_data[14])
+            # Insert data
+            values = row_data[:14] + (formatted_time,) + row_data[15:]
+            self.tree.insert("", tk.END, values=values)
+
+    @staticmethod
+    def convert_to_datetime(value):
+        if isinstance(value, datetime):
+            return value.strftime("%Y-%m-%d %H:%M:%S")
+        elif isinstance(value, (int, float)):
+            return datetime.fromtimestamp(value).strftime("%Y-%m-%d %H:%M:%S")
+        else:
+            return str(value)
 
 # Main function
 if __name__ == "__main__":
