@@ -1,4 +1,14 @@
-"""Save a screenshot on the device and copy it to the local machine/environment."""
+"""
+Project Name: ML_Learning
+File Name: save_screenshot.py
+Author: Liu Ming
+Created: March 5th, 2025
+Preparation: Ensure the Tektronix device is connected and accessible.
+Run: Execute this script in an environment with the necessary dependencies installed.
+Description: This script saves screenshots from a Tektronix MSO6B oscilloscope to the local machine.
+Modification Log:
+- March 5th, 2025: Initial creation by iuming.
+"""
 
 from tm_devices import DeviceManager
 from tm_devices.drivers import MSO6B
