@@ -5,7 +5,7 @@
       <excludeFolder url="file://$MODULE_DIR$/tensorflow2.0/class4/FASHION_FC/fashion_image_label" />
       <excludeFolder url="file://$MODULE_DIR$/tensorflow2.0/class4/MNIST_FC/mnist_image_label" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.11 (base) (2)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.12" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">
