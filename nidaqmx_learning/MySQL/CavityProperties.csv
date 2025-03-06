@@ -1,0 +1,19 @@
+Cavity type,Frequency [MHz],Leff [mm],Ep/Ea,Bp/Ea [mT/(MV/m)],R/Q [Ohm],G [Ohm],Note
+1.3G single-cell (end-cell),1300,113,1.9,4.19,106,273,TESLA长半腔短半腔组合成的单cell腔
+1.3G single-cell (mid-cell),1300,115,2.0,4.26,105,270,TESLA中间半腔组合成的单cell腔
+1.3G 9-cell,1300,1035,1.98,4.17,1013,272,TESLA-9cell腔
+650 single-cell,650,230,1.9,4.2,104.8,284,平台的650单cell腔
+BJKW-650 two-cell,650,460,2.38,4.17,213,284,北京科委的650-2cell腔
+BJKW-650 five-cell,650,1147,2.4,4.23,514,268,北京科委的650-5cell腔
+SINAP-3.9G single-cell,3814.5,38.44,1.85,4.6,91.9,271,上海合作的3.9G单cell腔
+973-double spoke,325,0.69,3.4,8.67,414,123,973项目的双spoke腔
+CEPC-650 two cell,650,460,2.35,4.2,211,279,PAPS 650MHz Cell腔（沙鹏）
+IBS-spoke,325,471,3.755,9.435,247.6,,韩国IBS项目
+1.3GHz copper niobium cavity,1300,115.9,2.002,4.834,109,,
+166MHz QWR腔,166.6,120,3.18,4.97,139,56,HEPS
+648MHz单SPOKE腔,648,185,5.21,8.6,170,94.5,王云
+500MHZ,500,240,2.12,4.4,89.4,,
+324MHz双spoke腔,324,694,3.44,8.86,401.8,118.6,
+HEPS 500MHz ,499.8,266.5,2.08,4.63,95,,
+1.3G 9-cell,1300,1018,1.98,4.17,1013,272,TESLA-9cell腔-SH
+648MHz6-cell腔,648,860,2.53,5.45,309,177,
