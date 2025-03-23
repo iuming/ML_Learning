@@ -274,9 +274,11 @@ if __name__ == "__main__":
         tensorboard_log="./tb_logs/"
     )
 
+    model.load("sc_cavity_control")
+
     # 训练并定期保存模型
     try:
-        model.learn(total_timesteps=1e6, progress_bar=True)
+        model.learn(total_timesteps=1e4, progress_bar=True)
     except KeyboardInterrupt:
         pass
 
