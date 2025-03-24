@@ -1,11 +1,24 @@
 import numpy as np
 import gymnasium as gym
 from gymnasium import spaces
+from rich.markup import render
 from stable_baselines3 import PPO
 import matplotlib.pyplot as plt
+from stable_baselines3.common.callbacks import BaseCallback
+from stable_baselines3.common.logger import Figure
+
+from stable_baselines3.common.vec_env import DummyVecEnv
+
 
 from llrflibs.rf_sim import *
 from llrflibs.rf_control import *
+
+import torch
+torch.backends.cudnn.benchmark = True
+torch.set_float32_matmul_precision('high')
+
+
+from stable_baselines3.common.vec_env import SubprocVecEnv
 
 
 def sim_cav(half_bw, RL, dw_step0, detuning0, vf_step, state_vc, Ts, beta=1e4,
@@ -39,8 +52,9 @@ def sim_cav(half_bw, RL, dw_step0, detuning0, vf_step, state_vc, Ts, beta=1e4,
 
 
 class SuperconductingCavityEnv(gym.Env):
-    def __init__(self, pulse_cycles=25):
+    def __init__(self, pulse_cycles=25, render_mode="human"):
         super().__init__()
+        render_mode = render_mode
 
         # 环境参数
         self.Ts = 1e-6  # 仿真时间步长
@@ -57,13 +71,13 @@ class SuperconductingCavityEnv(gym.Env):
             low=-2 * np.pi * 100,  # -100 Hz
             high=2 * np.pi * 100,  # +100 Hz
             shape=(1,),
-            dtype=np.float32
+            dtype=np.float64
         )
 
         self.observation_space = spaces.Box(
             low=np.array([0, -np.pi, -2 * np.pi * 500]),
             high=np.array([20e6, np.pi, 2 * np.pi * 500]),  # 幅值、相位、失谐量
-            dtype=np.float32
+            dtype=np.float64
         )
 
         # 数据收集
@@ -227,6 +241,7 @@ class SuperconductingCavityEnv(gym.Env):
         self.history['vc_phase'].append(np.angle(self.state_vc) * 180 / np.pi)
         self.history['detuning'].append(self.dw_current / (2 * np.pi))
         self.history['actions'].append(self.dw_current / (2 * np.pi))
+        print(f"Recording: vc_amp={self.history['vc_amp'][-1]}, len={len(self.history['vc_amp'])}")
 
     def _sim_rfsrc(self):
         pha = self.pha_src + 2.0 * np.pi * self.fsrc * self.Ts
@@ -260,27 +275,132 @@ class SuperconductingCavityEnv(gym.Env):
         plt.pause(0.001)
 
 
+class TrainingCallback(BaseCallback):
+    def __init__(self, check_freq: int, save_path: str, env: gym.Env, verbose=1):
+        super().__init__(verbose)
+        self.check_freq = check_freq
+        self.save_path = save_path
+        self.env = env
+        self.best_reward = -np.inf
+
+    def _on_step(self) -> bool:
+        if self.n_calls % self.check_freq == 0:
+            self.model.save(f"{self.save_path}/model_{self.num_timesteps}")
+            # 使用第一个子环境的 history 计算平均失谐量
+            avg_reward = np.mean(self.env.envs[0].history['detuning'][-1000:])
+            self.logger.record("train/avg_detuning", avg_reward)
+
+            if len(self.env.envs[0].history['vc_amp']) > 100:
+                fig = self._create_metrics_figure()
+                self.logger.record("trajectory/figure", Figure(fig, close=True),
+                                   exclude=("stdout", "log", "json", "csv"))
+
+            if avg_reward > self.best_reward:
+                self.best_reward = avg_reward
+                self.model.save(f"{self.save_path}/best_model")
+
+        # 每 100 步渲染第一个子环境
+        if self.n_calls % 100 == 0:
+            self.env.envs[0].render()
+
+        return True
+
+    def _create_metrics_figure(self):
+        fig, axs = plt.subplots(4, 1, figsize=(10, 8))
+        titles = ['Cavity Voltage (MV)', 'Phase (deg)', 'Detuning (Hz)', 'Piezo Adjustment (Hz)']
+        history = self.env.envs[0].history  # 使用第一个子环境的 history
+
+        for i, ax in enumerate(axs):
+            ax.clear()
+            ax.set_title(titles[i])
+            ax.grid(True)
+            data = list(history.values())[i][-1000:] if i < 3 else history['actions'][-1000:]
+            if len(data) > 0:
+                ax.plot(data)
+
+        plt.tight_layout()
+        return fig
+
+
+def run_trained_model(model_path="./sc_cavity_control_final.zip"):
+    # 创建环境
+    env = SuperconductingCavityEnv(pulse_cycles=1)  # 只运行1个周期用于演示
+
+    # 加载训练好的模型
+    model = PPO.load(model_path, env=env)
+
+    # 重置环境
+    obs, _ = env.reset()
+    done = False
+    while not done:
+        action, _ = model.predict(obs, deterministic=True)
+        obs, reward, done, truncated, info = env.step(action)
+
+    # 直接使用 env.history，不需要额外的 history 字典
+    fig, axs = plt.subplots(4, 1, figsize=(12, 10))
+    titles = ['Cavity Voltage (MV)', 'Phase (deg)', 'Detuning (Hz)', 'Piezo Adjustment (Hz)']
+    keys = ['vc_amp', 'vc_phase', 'detuning', 'actions']
+
+    for i, (ax, key) in enumerate(zip(axs, keys)):
+        # 确保数据转换为扁平的 NumPy 数组
+        data = np.array(env.history[key], dtype=np.float32)
+        if data.size > 0:  # 检查是否有数据
+            ax.plot(data)
+        else:
+            print(f"Warning: No data available for {key}")
+
+        ax.set_title(titles[i])
+        ax.set_xlabel('Time Step')
+        ax.grid(True)
+
+    plt.tight_layout()
+    plt.show()
+    env.close()
+
+    return env.history
+
+
 # 训练配置
 if __name__ == "__main__":
-    env = SuperconductingCavityEnv()
+
+    n_envs = 16
+    env = SubprocVecEnv([lambda: SuperconductingCavityEnv(render_mode="human") for _ in range(n_envs)])
+    callback = TrainingCallback(check_freq=10000, save_path="./saved_models", env=env)
+
+    # env = DummyVecEnv([lambda: SuperconductingCavityEnv(render_mode="human")])
+
+    callback = TrainingCallback(
+        check_freq=10000,  # 每10000步保存一次模型
+        save_path="./saved_models",
+        env=env
+    )
 
     model = PPO(
         "MlpPolicy",
         env,
-        verbose=1,
+        verbose=16,
         learning_rate=3e-4,
-        n_steps=2048,
-        batch_size=64,
-        tensorboard_log="./tb_logs/"
+        n_steps=4096,
+        batch_size=2048,
+        tensorboard_log="./tb_logs/",
+        device="cuda"
     )
 
-    model.load("sc_cavity_control")
-
-    # 训练并定期保存模型
+    model.load("sc_cavity_control_final")
     try:
-        model.learn(total_timesteps=1e4, progress_bar=True)
+        model.learn(
+            total_timesteps=1e3,
+            callback=callback,
+            progress_bar=True,
+            tb_log_name="ppo_sc_cavity"
+        )
     except KeyboardInterrupt:
-        pass
+        print("Training interrupted by user")
 
-    model.save("sc_cavity_control")
+    model.save("sc_cavity_control_final")
     env.close()
+
+    final_history = run_trained_model()
+
+    # 可选：保存结果数据
+    np.savez('simulation_results.npz', **final_history)
