@@ -363,11 +363,11 @@ def run_trained_model(model_path="./sc_cavity_control_final.zip"):
 # 训练配置
 if __name__ == "__main__":
 
-    n_envs = 16
-    env = SubprocVecEnv([lambda: SuperconductingCavityEnv(render_mode="human") for _ in range(n_envs)])
-    callback = TrainingCallback(check_freq=10000, save_path="./saved_models", env=env)
+    # n_envs = 16
+    # env = SubprocVecEnv([lambda: SuperconductingCavityEnv(render_mode="human") for _ in range(n_envs)])
+    # callback = TrainingCallback(check_freq=10000, save_path="./saved_models", env=env)
 
-    # env = DummyVecEnv([lambda: SuperconductingCavityEnv(render_mode="human")])
+    env = DummyVecEnv([lambda: SuperconductingCavityEnv(render_mode="human")])
 
     callback = TrainingCallback(
         check_freq=10000,  # 每10000步保存一次模型
@@ -389,7 +389,7 @@ if __name__ == "__main__":
     model.load("sc_cavity_control_final")
     try:
         model.learn(
-            total_timesteps=1e3,
+            total_timesteps=1e7,
             callback=callback,
             progress_bar=True,
             tb_log_name="ppo_sc_cavity"
