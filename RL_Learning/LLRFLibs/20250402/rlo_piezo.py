@@ -56,14 +56,16 @@ class SRFCavityEnv(gym.Env):
         super().reset(seed=seed)
         
         # Initialize cavity state-space model
-        # Calculate half bandwidth from QL and f0
-        half_bw = self.f0 / (2 * self.QL)
-        # Calculate detuning from mechanical mode
-        detuning = 2 * np.pi * self.fmech / self.f0
+        # Create mechanical modes dictionary
+        mech_modes = {
+            'f': [self.fmech],  # frequencies of mechanical modes in Hz
+            'Q': [self.Qmech],  # quality factors
+            'K': [self.Kmech]   # K values in rad/s/(MV)^2
+        }
         
         self.A, self.B, self.C, self.D = cav_ss_mech(
-            half_bw,  # half bandwidth
-            detuning  # detuning
+            mech_modes,  # mechanical modes dictionary
+            lpf_fc=None  # optional low-pass cutoff frequency
         )
         
         # Initialize state variables
