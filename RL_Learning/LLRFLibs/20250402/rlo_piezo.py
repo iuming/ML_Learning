@@ -57,13 +57,13 @@ class SRFCavityEnv(gym.Env):
         
         # Initialize cavity state-space model
         self.A, self.B, self.C, self.D = cav_ss_mech(
-            f0=self.f0,
-            QL=self.QL,
-            Rs=self.Rs,
-            beta=self.beta,
-            fmech=self.fmech,
-            Qmech=self.Qmech,
-            Kmech=self.Kmech
+            self.f0,  # f0
+            self.QL,  # QL
+            self.Rs,  # Rs
+            self.beta,  # beta
+            self.fmech,  # fmech
+            self.Qmech,  # Qmech
+            self.Kmech   # Kmech
         )
         
         # Initialize state variables
