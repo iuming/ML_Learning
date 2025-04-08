@@ -63,10 +63,13 @@ class SRFCavityEnv(gym.Env):
             'K': [self.Kmech]   # K values in rad/s/(MV)^2
         }
         
-        self.A, self.B, self.C, self.D = cav_ss_mech(
+        status, self.A, self.B, self.C, self.D = cav_ss_mech(
             mech_modes,  # mechanical modes dictionary
             lpf_fc=None  # optional low-pass cutoff frequency
         )
+        
+        if not status:
+            raise ValueError("Failed to initialize cavity state-space model")
         
         # Initialize state variables
         self.x = np.zeros(self.A.shape[0], dtype=np.complex128)
