@@ -6,19 +6,16 @@ from stable_baselines3 import PPO
 import matplotlib.pyplot as plt
 from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.logger import Figure
-
 from stable_baselines3.common.vec_env import DummyVecEnv
-
+from collections import deque
 
 from llrflibs.rf_sim import *
 from llrflibs.rf_control import *
 
 import torch
+
 torch.backends.cudnn.benchmark = True
 torch.set_float32_matmul_precision('high')
-
-
-from stable_baselines3.common.vec_env import SubprocVecEnv
 
 
 def sim_cav(half_bw, RL, dw_step0, detuning0, vf_step, state_vc, Ts, beta=1e4,
@@ -50,42 +47,42 @@ def sim_cav(half_bw, RL, dw_step0, detuning0, vf_step, state_vc, Ts, beta=1e4,
     # return
     return vc, vr, dw, state_vc, state_m
 
-
 class SuperconductingCavityEnv(gym.Env):
     def __init__(self, pulse_cycles=25, render_mode="human"):
         super().__init__()
-        render_mode = render_mode
+        self.render_mode = render_mode
 
         # 环境参数
         self.Ts = 1e-6  # 仿真时间步长
-        self.pulse_cycles = pulse_cycles  # 每个episode的脉冲周期数
-        self.current_cycle = 0  # 当前脉冲周期计数器
+        self.pulse_cycles = pulse_cycles
+        self.current_cycle = 0
 
-        # 按照正确的顺序初始化参数
-        self._init_mechanical_modes()  # 必须先初始化机械模式
-        self._init_cavity_parameters()  # 然后初始化腔体参数
-        self._init_simulation_parameters()  # 最后初始化仿真参数
+        # 初始化顺序保持不变
+        self._init_mechanical_modes()
+        self._init_cavity_parameters()
+        self._init_simulation_parameters()
 
-        # 定义动作和观测空间
+        # 动作和观测空间定义保持不变
         self.action_space = spaces.Box(
-            low=-2 * np.pi * 100,  # -100 Hz
-            high=2 * np.pi * 100,  # +100 Hz
+            low=-2 * np.pi * 100,
+            high=2 * np.pi * 100,
             shape=(1,),
             dtype=np.float64
         )
 
         self.observation_space = spaces.Box(
             low=np.array([0, -np.pi, -2 * np.pi * 500]),
-            high=np.array([20e6, np.pi, 2 * np.pi * 500]),  # 幅值、相位、失谐量
+            high=np.array([20e6, np.pi, 2 * np.pi * 500]),
             dtype=np.float64
         )
 
-        # 数据收集
+        # 使用deque限制历史记录长度
+        max_history = 10_000  # 根据内存调整
         self.history = {
-            'vc_amp': [],
-            'vc_phase': [],
-            'detuning': [],
-            'actions': []
+            'vc_amp': deque(maxlen=max_history),
+            'vc_phase': deque(maxlen=max_history),
+            'detuning': deque(maxlen=max_history),
+            'actions': deque(maxlen=max_history)
         }
 
     def _init_mechanical_modes(self):
@@ -107,7 +104,6 @@ class SuperconductingCavityEnv(gym.Env):
         )
         if not status:
             raise RuntimeError("离散化状态空间模型创建失败")
-
 
     def _init_simulation_parameters(self):
         """初始化仿真参数（需要在机械模式之后初始化）"""
@@ -148,52 +144,38 @@ class SuperconductingCavityEnv(gym.Env):
         self.dw0 = 0.0
 
     def reset(self, seed=None, options=None):
-        # 重置仿真状态
         super().reset(seed=seed)
 
+        # 重置状态
         self.buf_id = 0
         self.current_cycle = 0
-        self.state_vc = np.complex64(0.0)  # 使用numpy复数类型
+        self.state_vc = 0.0 + 0j
         self.state_m = np.matrix(np.zeros(self.Bd.shape))
         self.pha_src = 0.0
-        self.dw_current = np.float32(0.0)  # 使用numpy浮点类型
+        self.dw_current = 0.0
 
-        # 清空历史数据
-        self.history = {k: [] for k in self.history}
+        # 清空历史记录
+        for k in self.history:
+            self.history[k].clear()
 
-        return self._get_obs(), {}
+        return self._get_obs().flatten(), {}
 
     def step(self, action):
-        # 应用Piezo补偿
-        dw_piezo = action[0]
+        dw_piezo = action[0]  # 确保动作是标量
 
-        # 执行一个完整的脉冲周期
         cycle_rewards = []
         for _ in range(self.buf_size):
-            # 执行单个时间步仿真
             self._simulation_step(dw_piezo)
-
-            # 收集数据
-            self._record_data()
-
-            # 计算即时奖励
+            self._record_data()  # 记录标量数据
             cycle_rewards.append(-abs(self.dw_current / (2 * np.pi)))
 
-        # 更新周期计数器
         self.current_cycle += 1
 
-        # 计算总奖励
-        reward = np.mean(cycle_rewards)
-
-        # 检查终止条件
-        terminated = self.current_cycle >= self.pulse_cycles
-        truncated = False
-
         return (
-            self._get_obs().flatten(),  # 确保输出形状是(3,)
-            reward,
-            terminated,
-            truncated,
+            self._get_obs().flatten(),
+            np.mean(cycle_rewards),
+            self.current_cycle >= self.pulse_cycles,
+            False,
             {}
         )
 
@@ -229,19 +211,36 @@ class SuperconductingCavityEnv(gym.Env):
         # 更新缓冲区ID
         self.buf_id = (self.buf_id + 1) % self.buf_size
 
-    def _get_obs(self):
-        vc_amp = np.abs(np.array([self.state_vc], dtype=complex))[0]
-        vc_phase = np.angle(np.array([self.state_vc], dtype=complex))[0]
-        dw = self.dw_current / (2 * np.pi)
+        # 在执行仿真后添加校验
+        if not np.isfinite(self.vc):
+            raise ValueError("检测到非法的腔体电压值")
+        if abs(self.dw_current) > 2 * np.pi * 1e6:
+            raise ValueError(f"失谐量超出范围: {self.dw_current / (2 * np.pi):.1f} Hz")
 
-        return np.array([vc_amp, vc_phase, dw], dtype=np.float32)
+    def _get_obs(self):
+        # 确保返回标量观测值
+        return np.array([
+            float(abs(self.state_vc)),  # 幅值 (V)
+            float(np.angle(self.state_vc)),  # 相位 (rad)
+            float(self.dw_current / (2 * np.pi))  # 失谐量 (Hz)
+        ], dtype=np.float32)
 
     def _record_data(self):
-        self.history['vc_amp'].append(abs(self.state_vc) * 1e-6)
-        self.history['vc_phase'].append(np.angle(self.state_vc) * 180 / np.pi)
-        self.history['detuning'].append(self.dw_current / (2 * np.pi))
-        self.history['actions'].append(self.dw_current / (2 * np.pi))
-        print(f"Recording: vc_amp={self.history['vc_amp'][-1]}, len={len(self.history['vc_amp'])}")
+        """确保记录标量数据"""
+        try:
+            # 显式转换为Python原生float类型
+            self.history['vc_amp'].append(float(abs(self.state_vc) * 1e-6))  # 转换为MV
+            self.history['vc_phase'].append(float(np.angle(self.state_vc) * 180 / np.pi))
+            detuning = float(self.dw_current / (2 * np.pi))
+            self.history['detuning'].append(detuning)
+            self.history['actions'].append(detuning)  # 假设动作与失谐量量纲相同
+
+            # 调试日志
+            if len(self.history['vc_amp']) % 1000 == 0:
+                print(f"记录数据点: {len(self.history['vc_amp'])}")
+        except Exception as e:
+            print(f"数据记录错误: {str(e)}")
+            raise
 
     def _sim_rfsrc(self):
         pha = self.pha_src + 2.0 * np.pi * self.fsrc * self.Ts
@@ -254,6 +253,10 @@ class SuperconductingCavityEnv(gym.Env):
         return S1 * 10 ** (self.gain_dB / 20.0)
 
     def render(self, mode='human'):
+        # 添加数据有效性检查
+        if not all(len(v) > 10 for v in self.history.values()):
+            return
+
         # 实时可视化
         if not hasattr(self, 'fig'):
             self.fig, self.axs = plt.subplots(4, 1, figsize=(10, 8))
@@ -272,7 +275,7 @@ class SuperconductingCavityEnv(gym.Env):
             else:
                 ax.plot(self.history['actions'][-1000:])
 
-        plt.pause(0.001)
+        # plt.pause(0.001)
 
 
 class TrainingCallback(BaseCallback):
@@ -299,78 +302,63 @@ class TrainingCallback(BaseCallback):
                 self.best_reward = avg_reward
                 self.model.save(f"{self.save_path}/best_model")
 
-        # 每 100 步渲染第一个子环境
+            # 检查数据维度
+            hist = self.env.envs[0].history
+            if any(not all(isinstance(x, float) for x in v) for v in hist.values()):
+                print("警告: 检测到非浮点数历史数据")
+
         if self.n_calls % 100 == 0:
             self.env.envs[0].render()
 
         return True
 
-    def _create_metrics_figure(self):
-        fig, axs = plt.subplots(4, 1, figsize=(10, 8))
-        titles = ['Cavity Voltage (MV)', 'Phase (deg)', 'Detuning (Hz)', 'Piezo Adjustment (Hz)']
-        history = self.env.envs[0].history  # 使用第一个子环境的 history
-
-        for i, ax in enumerate(axs):
-            ax.clear()
-            ax.set_title(titles[i])
-            ax.grid(True)
-            data = list(history.values())[i][-1000:] if i < 3 else history['actions'][-1000:]
-            if len(data) > 0:
-                ax.plot(data)
-
-        plt.tight_layout()
-        return fig
-
 
 def run_trained_model(model_path="./sc_cavity_control_final.zip"):
-    # 创建环境
-    env = SuperconductingCavityEnv(pulse_cycles=1)  # 只运行1个周期用于演示
-
-    # 加载训练好的模型
+    env = SuperconductingCavityEnv(pulse_cycles=1)
     model = PPO.load(model_path, env=env)
 
-    # 重置环境
     obs, _ = env.reset()
     done = False
     while not done:
         action, _ = model.predict(obs, deterministic=True)
-        obs, reward, done, truncated, info = env.step(action)
+        obs, _, done, _, _ = env.step(action)
 
-    # 直接使用 env.history，不需要额外的 history 字典
     fig, axs = plt.subplots(4, 1, figsize=(12, 10))
-    titles = ['Cavity Voltage (MV)', 'Phase (deg)', 'Detuning (Hz)', 'Piezo Adjustment (Hz)']
+    titles = ['腔体电压 (MV)', '相位 (度)', '失谐量 (Hz)', '压电调整量 (Hz)']
     keys = ['vc_amp', 'vc_phase', 'detuning', 'actions']
 
     for i, (ax, key) in enumerate(zip(axs, keys)):
-        # 确保数据转换为扁平的 NumPy 数组
-        data = np.array(env.history[key], dtype=np.float32)
-        if data.size > 0:  # 检查是否有数据
-            ax.plot(data)
-        else:
-            print(f"Warning: No data available for {key}")
+        try:
+            # 转换前检查数据类型
+            raw_data = list(env.history[key])
+            if not raw_data:
+                print(f"无数据: {key}")
+                continue
 
-        ax.set_title(titles[i])
-        ax.set_xlabel('Time Step')
-        ax.grid(True)
+            # 处理可能的嵌套结构
+            if isinstance(raw_data[0], (list, np.ndarray)):
+                print(f"展开嵌套数据: {key}")
+                raw_data = [item for sublist in raw_data for item in sublist]
+
+            data = np.asarray(raw_data, dtype=np.float32).squeeze()
+            ax.plot(data[-5000:])  # 仅显示最后5000个点
+            ax.set_title(titles[i])
+            ax.grid(True)
+        except Exception as e:
+            print(f"绘图错误 {key}: {str(e)}")
 
     plt.tight_layout()
     plt.show()
     env.close()
-
     return env.history
 
 
-# 训练配置
+# 训练配置（保持不变）
 if __name__ == "__main__":
-
-    # n_envs = 16
-    # env = SubprocVecEnv([lambda: SuperconductingCavityEnv(render_mode="human") for _ in range(n_envs)])
-    # callback = TrainingCallback(check_freq=10000, save_path="./saved_models", env=env)
-
     env = DummyVecEnv([lambda: SuperconductingCavityEnv(render_mode="human")])
 
     callback = TrainingCallback(
-        check_freq=10000,  # 每10000步保存一次模型
+        check_freq=10000,
         save_path="./saved_models",
         env=env
     )
@@ -386,21 +374,18 @@ if __name__ == "__main__":
         device="cuda"
     )
 
-    model.load("saved_models/model_980000")
-    # try:
-    #     model.learn(
-    #         total_timesteps=1e6,
-    #         callback=callback,
-    #         progress_bar=True,
-    #         tb_log_name="ppo_sc_cavity"
-    #     )
-    # except KeyboardInterrupt:
-    #     print("Training interrupted by user")
+    try:
+        model.learn(
+            total_timesteps=1e1,
+            callback=callback,
+            progress_bar=True,
+            tb_log_name="ppo_sc_cavity"
+        )
+    except KeyboardInterrupt:
+        print("训练被用户中断")
 
     model.save("sc_cavity_control_final")
     env.close()
 
     final_history = run_trained_model()
-
-    # 可选：保存结果数据
     np.savez('simulation_results.npz', **final_history)
