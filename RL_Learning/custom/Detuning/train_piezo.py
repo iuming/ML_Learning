@@ -45,7 +45,7 @@ model = PPO(
 
 # 开始训练
 model.learn(
-    total_timesteps=500_000,
+    total_timesteps=1_000_000,
     callback=eval_callback,
     tb_log_name="ppo"
 )
