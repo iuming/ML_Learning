@@ -1,0 +1,6 @@
+Collecting posix_ipc
+  Using cached posix_ipc-1.2.0.tar.gz (95 kB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'error'
