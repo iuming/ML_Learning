@@ -15,7 +15,7 @@ class SinEnv(gym.Env):
         self.max_steps = 1000
         self.dt = 2 * np.pi / (self.max_steps - 1)
         self.action_space = gym.spaces.Box(
-            low=-1.0, high=1.0, shape=(1,), dtype=np.float32)
+            low=-2.0, high=2.0, shape=(1,), dtype=np.float32)
         self.observation_space = gym.spaces.Box(
             low=np.array([-2.0, -1.0, -1.0]),
             high=np.array([2.0, 1.0, 1.0]),
@@ -45,7 +45,7 @@ class SinEnv(gym.Env):
 
     def step(self, action):
         action = np.clip(action, self.action_space.low, self.action_space.high)
-        current_sin = np.sin(self.t)
+        current_sin = np.sin(20.0 * self.t)
 
         # 构建观测
         obs = np.array([
