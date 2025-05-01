@@ -75,21 +75,23 @@ print(f"Reward evaluation plot saved to {reward_image_path}")
 # 显示奖励分布图片
 plt.show()
 
-# 绘制腔体相关量
-plt.figure()
-sig_vc = np.array(sig_vc_real_all) + 1j * np.array(sig_vc_imag_all)
-plt.subplot(3, 1, 1)
-plt.plot(np.abs(sig_vc) * 1e-6)
-plt.xlabel('Time (Ts)')
-plt.ylabel('Cavity Voltage (MV)')
-plt.subplot(3, 1, 2)
-plt.plot(np.angle(sig_vc) * 180 / np.pi)
-plt.xlabel('Time (Ts)')
-plt.ylabel('Cavity Phase (deg)')
-plt.subplot(3, 1, 3)
-plt.plot(np.array(sig_dw_all) / 2 / np.pi)
-plt.xlabel('Time (Ts)')
-plt.ylabel('Detuning (Hz)')
+# 进行一定步数的交互
+num_steps = 1000000
+for _ in range(num_steps):
+    # 随机选择一个动作
+    # action = env.action_space.sample()
+    action, _ = model.predict(obs, deterministic=True)
+
+    # 执行动作
+    observation, reward, terminated, truncated, info = env.step(action)
+
+    # 检查是否终止或截断
+    if terminated or truncated:
+        # 重置环境
+        observation, info = env.reset()
+
+# 渲染环境
+env.render()
 
 # 生成腔体相关量图片文件名
 cavity_image_filename = f'cavity_evaluation_total_timesteps_{total_timesteps}_policy_{policy_type}_lr_{learning_rate}_n_steps_{n_steps}_batch_size_{batch_size}_n_epochs_{n_epochs}_gamma_{gamma}_ent_coef_{ent_coef}.png'

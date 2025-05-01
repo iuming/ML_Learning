@@ -165,7 +165,7 @@ class SinEnv(gym.Env):
 
     def step(self, action):
         action = np.clip(action, self.action_space.low, self.action_space.high)
-        current_sin = np.sin(20.0 * self.t)
+        current_sin = np.sin(50.0 * self.t)
 
         self.action_history.pop(0)
         self.action_history.append(action)

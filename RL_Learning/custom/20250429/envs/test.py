@@ -13,7 +13,8 @@ def test_rf_environment():
     num_steps = 1000000
     for _ in range(num_steps):
         # 随机选择一个动作
-        action = env.action_space.sample()
+        # action = env.action_space.sample()
+        action = [1.0]
 
         # 执行动作
         observation, reward, terminated, truncated, info = env.step(action)

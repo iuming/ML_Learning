@@ -65,7 +65,7 @@ class RFEnvironment(gym.Env):
         self.current_step = 0
 
         # 定义动作空间和状态空间
-        self.action_space = spaces.Box(low=-10, high=10, shape=(1,), dtype=np.float32)
+        self.action_space = spaces.Box(low=0.8, high=1.2, shape=(1,), dtype=np.float32)
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(6,), dtype=np.float32)
 
         # 用于记录数据
@@ -76,6 +76,7 @@ class RFEnvironment(gym.Env):
         self.sig_vc_real = []
         self.sig_vc_imag = []
         self.sig_dw = []
+        self.action_history = []
 
     def sim_rfsrc(self):
         pha = self.pha_src + 2.0 * np.pi * self.fsrc * self.Ts
@@ -119,6 +120,9 @@ class RFEnvironment(gym.Env):
         return vc, vr, dw
 
     def step(self, action):
+        # record action
+        self.action_history.append(action[0])
+
         # 假设动作影响 RF 源的幅度
         self.Asrc = action[0]
 
@@ -145,7 +149,7 @@ class RFEnvironment(gym.Env):
                                dtype=np.float32)
 
         # 简单的奖励函数，可根据实际需求修改
-        reward = -np.abs(np.abs(vc) - 1e6)
+        reward = -np.abs(np.abs(vc) * 1e-6 - 10)  # 目标是使腔体电压接近10 MV
 
         terminated = self.current_step >= self.sim_len - 1
         truncated = False
@@ -183,6 +187,7 @@ class RFEnvironment(gym.Env):
         self.sig_vc_real = []
         self.sig_vc_imag = []
         self.sig_dw = []
+        self.action_history = []
 
         # 初始观测值
         S0 = self.sim_rfsrc()
@@ -226,3 +231,10 @@ class RFEnvironment(gym.Env):
             plt.ylabel('Detuning (Hz)')
             plt.show()
 
+            plt.figure()
+            plt.plot(self.action_history, label='Action')
+            plt.xlabel('Time Step')
+            plt.ylabel('Action Value')
+            plt.title('Action History')
+            plt.legend()
+            plt.show()

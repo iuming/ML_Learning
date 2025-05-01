@@ -24,7 +24,7 @@ eval_callback = EvalCallback(eval_env, best_model_save_path=log_dir,
 model = PPO('MlpPolicy', env, verbose=1, device='cpu')
 
 # 训练模型
-model.learn(total_timesteps=100000, callback=eval_callback)
+model.learn(total_timesteps=100_000, callback=eval_callback)
 
 # 保存最终模型
 model.save(os.path.join(log_dir, "final_model"))
