@@ -19,9 +19,9 @@ class SinEnv(gym.Env):
         self.action_space = gym.spaces.Box(
             low=-2.0, high=2.0, shape=(1,), dtype=np.float32)
         self.observation_space = gym.spaces.Box(
-            low=np.array([-2.0, -1.0, -1.0]),
-            high=np.array([2.0, 1.0, 1.0]),
-            shape=(3,),
+            low=np.array([-20.0, -20.0, -360.0, -10.0]),
+            high=np.array([20.0, 20.0, 360.0, 10.0]),
+            shape=(4,),
             dtype=np.float32
         )
 
@@ -136,7 +136,8 @@ class SinEnv(gym.Env):
         observation = np.array([
             np.sin(self.t),  # f(t)
             np.sin(self.t),  # sin(t)
-            np.cos(self.t)  # cos(t)
+            np.cos(self.t),  # cos(t)
+            0.0  # dw
         ], dtype=np.float32)
 
         self.pha_src = 0
@@ -167,24 +168,53 @@ class SinEnv(gym.Env):
         action = np.clip(action, self.action_space.low, self.action_space.high)
         current_sin = np.sin(50.0 * self.t)
 
+        self.S0, self.pha_src = self.sim_rfsrc()
+
+
+        if self.pulsed:
+            self.buf_id += 1
+            if self.buf_id >= self.pul_len:
+                self.buf_id = 0
+
+        self.S1 = self.sim_iqmod(self.S0)
+        
+        self.S2 = self.sim_amp(self.S1)
+        
+        self.dw_micr = 2.0 * np.pi * np.random.randn() * 10
+        dw_piezo = 2 * np.pi * action[0] * 1e4
+        
+        self.vc, self.vr, self.dw, self.state_vc, self.state_m = self.sim_cav(self.S2, dw_piezo + self.dw_micr)
+        
+        
+
         self.action_history.pop(0)
         self.action_history.append(action)
-        dw_piezo = 2 * np.pi * action[0]
+        
         prev_dw = self.dw
 
         # 构建观测
         obs = np.array([
-            current_sin + action[0],  # f(t)
-            current_sin,  # sin(t)
-            np.cos(self.t)  # cos(t)
+            float(abs(self.vc) * 1e-6),
+            float(abs(self.vr) * 1e-6), 
+            float(np.angle(self.vc) * 180 / np.pi),
+            float(self.dw * 1e-3)   # dw
         ], dtype=np.float32)
+
+
+        # obs = np.array([
+        #     current_sin + action[0],
+        #     current_sin,
+        #     np.cos(self.t),
+        #     np.sin(self.t)  # dw
+        # ], dtype=np.float32)
 
         # 记录数据
         self.history_t.append(self.t)
         self.history_ft.append(obs[0].item())
 
         # 计算奖励
-        reward = -np.abs(obs[0])
+        # reward = -np.abs(obs[0])
+        reward = -np.abs(obs[3]) # 这里的奖励是基于频率偏移量的绝对值
 
         # 更新状态
         self.t += self.dt

@@ -3,6 +3,7 @@ import numpy as np
 from stable_baselines3 import PPO
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.evaluation import evaluate_policy
+from datetime import datetime
 import matplotlib.pyplot as plt
 
 # 必须导入自定义环境模块以完成注册
@@ -38,7 +39,7 @@ for _ in range(1000):
     action, _ = best_model.predict(obs, deterministic=True)
     obs, reward, terminated, truncated, _ = test_env.step(action)
     total_reward += reward
-    observations.append(obs)
+    observations.append(obs[3])
     actions.append(action)
     rewards.append(reward)
     if terminated or truncated:
@@ -69,4 +70,19 @@ plt.xlabel('Step')
 plt.ylabel('Observation')
 
 plt.tight_layout()
+
+# 获取当前时间
+current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+# 获取模型的训练总步数和学习率
+training_total_timesteps = best_model.n_steps * best_model.n_envs
+learning_rate = best_model.learning_rate
+
+# 构造文件名
+file_name = f"results/test_results_{current_time}_steps_{training_total_timesteps}_lr_{learning_rate:.1e}.png"
+
+# 保存图像
+plt.savefig(file_name)
+print(f"Plot saved as {file_name}")
+
 plt.show()
