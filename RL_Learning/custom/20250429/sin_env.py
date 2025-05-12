@@ -180,7 +180,7 @@ class SinEnv(gym.Env):
         
         self.S2 = self.sim_amp(self.S1)
         
-        self.dw_micr = 2.0 * np.pi * np.random.randn() * 10
+        self.dw_micr = 2.0 * np.pi * np.random.randn() * 0
         dw_piezo = 2 * np.pi * action[0] * 1e4
         
         self.vc, self.vr, self.dw, self.state_vc, self.state_m = self.sim_cav(self.S2, dw_piezo + self.dw_micr)
