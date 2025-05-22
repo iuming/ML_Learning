@@ -222,6 +222,7 @@ class SinEnv(gym.Env):
 
         terminated = False
         truncated = self.step_count >= self.max_steps
+        # truncated = False
         info = {}
 
         return obs, reward, terminated, truncated, info

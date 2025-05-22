@@ -35,7 +35,7 @@ total_reward = 0
 actions = []
 rewards = []
 observations = []
-for _ in range(1000):
+for _ in range(10000):
     action, _ = best_model.predict(obs, deterministic=True)
     obs, reward, terminated, truncated, _ = test_env.step(action)
     total_reward += reward
@@ -43,7 +43,9 @@ for _ in range(1000):
     actions.append(action)
     rewards.append(reward)
     if terminated or truncated:
-        break
+        test_env.reset()
+        # break
+    
 
 print(f"Demo Total Reward: {total_reward:.1f}")
 
