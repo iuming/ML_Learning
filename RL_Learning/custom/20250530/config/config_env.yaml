@@ -1,0 +1,6 @@
+environment:
+  initial_temperature: 20.0
+  target_temperature: 22.0
+  max_steps: 100
+  temperature_change: 1.0
+  tolerance: 0.5
