@@ -1,27 +1,27 @@
-Temperature Control with Reinforcement Learning
+# Temperature Control with Reinforcement Learning
 This project implements a reinforcement learning agent to control the temperature in a simulated room using Gymnasium and Stable Baselines3.
-Installation
+
+## Installation
 Install the required dependencies:
 pip install -r requirements.txt
 
-Usage
-To train the DQN agent, run the training script from the temperature_control directory:
+## Usage
+To train the DQN agent:
+
+```bash
 python train_dqn.py
+```
 
-The trained model will be saved as dqn_temperature_control.zip. After training, the script will automatically test the agent by running a simulation for 100 steps, rendering the temperature at each step.
-Configuration
-Parameters for the environment and training process are stored in YAML files within the config/ directory:
+To evaluate the trained agent and visualize the temperature control:
 
-config/config_env.yaml: Environment parameters (e.g., initial temperature, target temperature).
-config/config_train.yaml: Training parameters (e.g., learning rate, buffer size).
+```bash
+python evaluate_dqn.py
+```
 
-To modify parameters, edit the corresponding YAML file before running the training script.
-Example: Modifying Target Temperature
-To change the target temperature to 25°C, update config/config_env.yaml:
-environment:
-  initial_temperature: 20.0
-  target_temperature: 25.0  # Changed from 22.0
-  max_steps: 100
-  temperature_change: 1.0
-  tolerance: 0.5
+The evaluation script will display a plot of the temperature over time after running the agent for 100 steps.
 
+
+### How It Works
+- **Data Collection**: During evaluation, the script collects the temperature at each step in the `temperatures` list and the corresponding step numbers in the `steps` list.
+- **Plotting**: After 100 steps, the `plot_temperature` function creates a line plot of the temperature over time, with a dashed red line indicating the target temperature for reference.
+- **Output**: The plot is displayed immediately after evaluation, showing how well the agent controls the temperature.
