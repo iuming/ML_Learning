@@ -1,5 +1,45 @@
 """
-Configuration file for RF Cavity Control Environment
+Configuration File for RF Cavity Control System
+
+Filename: config.py
+Author: Ming Liu
+Email: ming.liu@example.com
+GitHub: https://github.com/iuming
+Created: 2025-07-25
+Version: 1.0.0
+
+Description:
+    This module contains all configuration parameters for the RF cavity control
+    system, including environment settings, training hyperparameters, and
+    evaluation configurations. The centralized configuration approach allows
+    for easy parameter tuning and experimental setup.
+
+Features:
+    - Environment configuration (RF system parameters)
+    - Training configuration (PPO hyperparameters)
+    - Evaluation configuration (testing parameters)
+    - Real-time control settings
+    - Modular parameter organization
+
+Dependencies:
+    - None (pure configuration)
+
+Changelog:
+    v1.0.0 (2025-07-25):
+        - Initial configuration structure
+        - Added comprehensive environment parameters
+        - Defined PPO training hyperparameters
+        - Created evaluation and real-time control configs
+        - Organized parameters by functional categories
+
+License:
+    This code is part of the ML_Learning repository.
+    
+Usage:
+    from config import ENV_CONFIG, TRAINING_CONFIG, EVAL_CONFIG
+    
+    env = RFCavityControlEnv(config=ENV_CONFIG)
+    model = PPO(**TRAINING_CONFIG)
 """
 
 # Environment Configuration

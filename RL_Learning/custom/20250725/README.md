@@ -42,6 +42,7 @@ This project implements a reinforcement learning system for controlling RF (Radi
 - **RF Amplifier**: Simulates signal amplification
 - **Cavity Dynamics**: Includes mechanical modes and beam loading effects
 - **Piezo Control**: Frequency control through piezo actuators
+- **Real-Time Interface**: Live monitoring and manual control capabilities
 
 ## Installation
 
@@ -74,6 +75,25 @@ Test a trained model:
 python main.py test
 ```
 
+Real-time control (command line):
+```bash
+python main.py realtime
+```
+
+Real-time control (GUI):
+```bash
+python main.py realtime-gui
+```
+
+#### Windows用户
+```bash
+# 双击运行批处理文件
+train.bat           # 训练
+test.bat            # 测试  
+realtime.bat        # 实时控制 (命令行)
+realtime_gui.bat    # 实时控制 (GUI)
+```
+
 ### Advanced Usage
 
 #### Training
@@ -101,6 +121,21 @@ Testing features:
 - Comprehensive visualization of control performance
 - Performance analysis and statistics
 
+#### Real-Time Control
+```bash
+cd scripts
+python realtime_simple.py    # Command line interface
+python realtime_gui.py       # GUI interface
+```
+
+Real-time control features:
+- Live monitoring of RF cavity parameters
+- Manual control intervention
+- Automatic control with trained models
+- Real-time data logging and visualization
+- Pause/resume/reset simulation capabilities
+- Export data for analysis
+
 #### Environment Testing
 ```bash
 cd scripts
@@ -112,6 +147,76 @@ Verifies that the environment:
 - Produces valid observations and rewards
 - Handles actions properly
 - Doesn't generate NaN or infinite values
+
+## Real-Time Control Interface
+
+The system includes two real-time control interfaces for live monitoring and manual intervention:
+
+### Command Line Interface
+A lightweight terminal-based interface for real-time control:
+
+```bash
+python main.py realtime
+# or
+cd scripts && python realtime_simple.py
+```
+
+Features:
+- **Live monitoring**: Real-time display of cavity parameters
+- **Manual control**: Direct piezo action input
+- **Automatic control**: Use trained RL models
+- **Simulation control**: Start/pause/reset/stop
+- **Status reporting**: Periodic performance updates
+
+Commands:
+- `a` - Enable automatic control (requires loaded model)
+- `m` - Enable manual control mode
+- `o` - Turn off all control
+- `p` - Pause/resume simulation
+- `r` - Reset simulation
+- `s` - Show detailed status
+- `q` - Quit
+
+### GUI Interface
+A comprehensive graphical interface with real-time plots:
+
+```bash
+python main.py realtime-gui
+# or
+cd scripts && python realtime_gui.py
+```
+
+Features:
+- **Real-time plotting**: Live visualization of all system parameters
+- **Control panel**: Easy switching between control modes
+- **Model management**: Load and switch between trained models
+- **Data export**: Save simulation data to CSV
+- **Interactive control**: Manual action slider with immediate feedback
+- **Status monitoring**: Comprehensive system status display
+
+GUI Components:
+1. **Control Panel**: Simulation controls, mode selection, manual action slider
+2. **Status Display**: Current values, performance metrics, status log
+3. **Real-time Plots**: Six synchronized plots showing:
+   - Cavity voltage amplitude
+   - Reflected voltage amplitude
+   - Cavity voltage phase
+   - Frequency detuning (primary objective)
+   - Control actions
+   - Rewards
+
+### Real-Time Control Features
+
+Both interfaces support:
+- **Multiple control modes**:
+  - Automatic: Uses trained RL model
+  - Manual: User-defined actions
+  - Off: No control (system runs freely)
+- **Live data visualization**: Real-time monitoring of cavity performance
+- **Model hot-swapping**: Load different models without restarting
+- **Data logging**: Continuous recording of all system parameters
+- **Simulation control**: Full control over simulation state
+- **Performance monitoring**: Real-time calculation of control metrics
 
 ## Configuration
 
@@ -208,14 +313,27 @@ The trained model aims to:
 - [ ] Implement multi-objective optimization (stability + efficiency)
 - [ ] Add support for different cavity configurations
 - [ ] Implement transfer learning between different cavities
-- [ ] Add real-time control interface
+- [x] Add real-time control interface ✅
 - [ ] Develop web-based monitoring dashboard
+- [ ] Add advanced control algorithms (PID, LQR, MPC)
+- [ ] Implement distributed control for multiple cavities
+- [ ] Add fault detection and diagnosis capabilities
 
 ## References
 
 - [Stable Baselines3 Documentation](https://stable-baselines3.readthedocs.io/)
 - [Gymnasium Documentation](https://gymnasium.farama.org/)
 - [PPO Paper](https://arxiv.org/abs/1707.06347)
+
+## Author & Contact
+
+**Author**: Ming Liu  
+**Email**: ming.liu@example.com  
+**GitHub**: https://github.com/iuming  
+**Created**: 2025-07-25  
+**Version**: 1.0.0  
+
+For questions, suggestions, or collaboration opportunities, please feel free to reach out via email or create an issue on the GitHub repository.
 
 ## License
 

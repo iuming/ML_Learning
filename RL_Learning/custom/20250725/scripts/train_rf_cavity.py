@@ -1,9 +1,54 @@
 """
 RF Cavity Control Training Script
 
-This script trains a PPO agent to control an RF cavity system using
-reinforcement learning. The agent learns to minimize frequency detuning
-through piezo-based frequency control.
+Filename: train_rf_cavity.py
+Author: Ming Liu
+Email: ming.liu@example.com
+GitHub: https://github.com/iuming
+Created: 2025-07-25
+Version: 1.0.0
+
+Description:
+    This script trains a Proximal Policy Optimization (PPO) agent to control
+    RF cavity amplitude and phase using reinforcement learning. The training
+    process uses Stable-Baselines3 with optimized hyperparameters for stable
+    convergence on CPU-based training.
+
+Features:
+    - PPO algorithm with optimized hyperparameters
+    - CPU-only training for numerical stability
+    - Tensorboard logging for monitoring
+    - Model checkpointing and saving
+    - Comprehensive error handling
+    - Progress monitoring with callback system
+
+Dependencies:
+    - stable_baselines3
+    - gymnasium
+    - numpy
+    - tensorboard (for logging)
+    - matplotlib (for visualization)
+    - llrflibs (for RF cavity simulation)
+
+Changelog:
+    v1.0.0 (2025-07-25):
+        - Initial training script implementation
+        - Added PPO with CPU optimization
+        - Implemented comprehensive logging
+        - Added model saving and checkpointing
+        - Fixed NaN handling issues
+        - Optimized hyperparameters for stability
+
+License:
+    This code is part of the ML_Learning repository.
+    
+Usage:
+    python train_rf_cavity.py
+    
+    # Monitor training progress:
+    tensorboard --logdir ./logs/
+    
+    # Adjust hyperparameters in configs/config.py
 """
 
 import gymnasium as gym

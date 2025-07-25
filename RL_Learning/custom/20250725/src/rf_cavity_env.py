@@ -1,8 +1,53 @@
 """
 RF Cavity Control Environment for Reinforcement Learning
 
-This environment simulates a radio frequency (RF) cavity control system
-with mechanical modes, beam loading, and piezo-based frequency control.
+Filename: rf_cavity_env.py
+Author: Ming Liu
+Email: ming.liu@example.com
+GitHub: https://github.com/iuming
+Created: 2025-07-25
+Version: 1.0.0
+
+Description:
+    This module implements a comprehensive RF (Radio Frequency) cavity control 
+    environment for reinforcement learning applications. The environment simulates 
+    a realistic RF cavity system with mechanical modes, beam loading effects, 
+    and piezo-based frequency control, designed for training RL agents to minimize 
+    frequency detuning.
+
+Features:
+    - Physics-based RF cavity simulation
+    - Mechanical mode dynamics
+    - Beam loading effects
+    - Piezo actuator control
+    - Real-time rendering capabilities
+    - Comprehensive safety checks for numerical stability
+
+Dependencies:
+    - gymnasium
+    - numpy
+    - matplotlib
+    - llrflibs (RF simulation library)
+
+Changelog:
+    v1.0.0 (2025-07-25):
+        - Initial implementation of RF cavity environment
+        - Added comprehensive observation and action spaces
+        - Implemented physics-based simulation components
+        - Added numerical stability and safety checks
+        - Integrated real-time rendering capabilities
+        - Created modular design for easy configuration
+
+License:
+    This code is part of the ML_Learning repository.
+    
+Usage:
+    from rf_cavity_env import RFCavityControlEnv
+    
+    env = RFCavityControlEnv()
+    obs, info = env.reset()
+    action = env.action_space.sample()
+    obs, reward, terminated, truncated, info = env.step(action)
 """
 
 import gymnasium as gym

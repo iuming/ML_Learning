@@ -1,9 +1,56 @@
 """
-RF Cavity Control Testing and Evaluation Script
+RF Cavity Control Model Evaluation Script
 
-This script loads a trained PPO model and evaluates its performance
-on the RF cavity control task. It provides detailed analysis and
-visualization of the control performance.
+Filename: test_rf_cavity.py
+Author: Ming Liu
+Email: ming.liu@example.com
+GitHub: https://github.com/iuming
+Created: 2025-07-25
+Version: 1.0.0
+
+Description:
+    This script evaluates the performance of trained PPO agents for RF cavity
+    control. It provides comprehensive analysis including reward tracking,
+    action distribution analysis, system response visualization, and statistical
+    performance metrics.
+
+Features:
+    - Model loading and evaluation
+    - Multi-episode performance analysis
+    - Real-time visualization capabilities
+    - Statistical performance metrics
+    - Action distribution analysis
+    - System response characterization
+    - Comprehensive plotting and logging
+
+Dependencies:
+    - stable_baselines3
+    - gymnasium
+    - numpy
+    - matplotlib
+    - pandas (for data analysis)
+    - llrflibs (for RF cavity simulation)
+
+Changelog:
+    v1.0.0 (2025-07-25):
+        - Initial evaluation script implementation
+        - Added comprehensive performance analysis
+        - Implemented multi-plot visualization
+        - Added statistical metrics calculation
+        - Created action distribution analysis
+        - Enhanced error handling and logging
+
+License:
+    This code is part of the ML_Learning repository.
+    
+Usage:
+    python test_rf_cavity.py
+    
+    # Evaluate specific model:
+    python test_rf_cavity.py --model_path path/to/model.zip
+    
+    # Run with custom episodes:
+    python test_rf_cavity.py --episodes 100
 """
 
 import gymnasium as gym
