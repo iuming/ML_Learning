@@ -1,0 +1,222 @@
+# RF Cavity Control with Reinforcement Learning
+
+This project implements a reinforcement learning system for controlling RF (Radio Frequency) cavity systems using PPO (Proximal Policy Optimization). The agent learns to minimize frequency detuning through piezo-based frequency control.
+
+## Project Structure
+
+```
+.
+├── main.py                 # Main entry point
+├── src/                    # Source code
+│   └── rf_cavity_env.py   # RF cavity environment implementation
+├── scripts/                # Training and testing scripts
+│   ├── train_rf_cavity.py # Training script
+│   ├── test_rf_cavity.py  # Testing and evaluation script
+│   └── test_environment.py # Environment testing
+├── configs/                # Configuration files
+│   └── config.py          # Environment and training configurations
+├── best_model/            # Best trained models
+├── models/                # All trained models
+├── logs/                  # Training logs
+├── results/               # Test results and plots
+└── ppo_rf_cavity_tensorboard/ # Tensorboard logs
+```
+
+## Features
+
+### Environment (`RFCavityControlEnv`)
+- **Observation Space**: 4D continuous space
+  - Cavity voltage amplitude (MV)
+  - Reflected voltage amplitude (MV)
+  - Cavity voltage phase (degrees)
+  - Frequency detuning (kHz)
+
+- **Action Space**: 1D continuous space
+  - Piezo control signal [-2.0, 2.0]
+
+- **Reward Function**: Negative absolute frequency detuning (encourages minimizing detuning)
+
+### Key Components
+- **RF Source Simulation**: Models RF signal generation
+- **I/Q Modulator**: Handles pulsed/CW operation modes
+- **RF Amplifier**: Simulates signal amplification
+- **Cavity Dynamics**: Includes mechanical modes and beam loading effects
+- **Piezo Control**: Frequency control through piezo actuators
+
+## Installation
+
+1. Ensure you have the required dependencies:
+```bash
+pip install gymnasium stable-baselines3 matplotlib numpy
+```
+
+2. Install the LLRF libraries (required for RF simulation):
+```bash
+# Install llrflibs according to your system requirements
+```
+
+## Usage
+
+### Quick Start
+
+Test the environment:
+```bash
+python main.py env-test
+```
+
+Train a new model:
+```bash
+python main.py train
+```
+
+Test a trained model:
+```bash
+python main.py test
+```
+
+### Advanced Usage
+
+#### Training
+```bash
+cd scripts
+python train_rf_cavity.py
+```
+
+Training features:
+- PPO algorithm with customizable hyperparameters
+- Vectorized environments for parallel training
+- Early stopping based on reward threshold
+- Automatic model saving and evaluation
+- Tensorboard logging for monitoring
+
+#### Testing and Evaluation
+```bash
+cd scripts
+python test_rf_cavity.py
+```
+
+Testing features:
+- Model performance evaluation over multiple episodes
+- Detailed demonstration with data logging
+- Comprehensive visualization of control performance
+- Performance analysis and statistics
+
+#### Environment Testing
+```bash
+cd scripts
+python test_environment.py
+```
+
+Verifies that the environment:
+- Initializes correctly
+- Produces valid observations and rewards
+- Handles actions properly
+- Doesn't generate NaN or infinite values
+
+## Configuration
+
+The system is highly configurable through `configs/config.py`:
+
+### Environment Configuration
+- RF system parameters (cavity frequency, Q-factors, etc.)
+- Mechanical mode specifications
+- Beam loading parameters
+- Simulation settings
+
+### Training Configuration
+- PPO hyperparameters
+- Network architecture
+- Training duration and evaluation frequency
+- Device selection (CPU/GPU)
+
+### Evaluation Configuration
+- Number of evaluation episodes
+- Visualization settings
+- Output configuration
+
+## Model Performance
+
+The trained model aims to:
+1. **Minimize frequency detuning**: Keep cavity frequency close to target
+2. **Maintain stability**: Avoid large oscillations
+3. **Efficient control**: Use minimal control effort
+
+### Performance Metrics
+- **Mean absolute detuning**: Primary performance indicator
+- **Control effort**: Action magnitude and variation
+- **Stability**: Detuning change rate
+- **Convergence**: Time to reach stable operation
+
+### Expected Results
+- Well-trained models typically achieve < 1 kHz mean absolute detuning
+- Control actions should be smooth and responsive
+- System should quickly recover from disturbances
+
+## Technical Details
+
+### Environment Implementation
+- **Physics-based simulation**: Uses actual RF cavity equations
+- **Numerical stability**: Comprehensive NaN/Inf checking
+- **Configurable parameters**: Easy adaptation to different cavity systems
+- **Observation scaling**: Proper normalization for RL training
+
+### Training Algorithm
+- **PPO**: Proven algorithm for continuous control
+- **Vectorized environments**: Parallel data collection
+- **CPU optimization**: Configured for stable training on CPU
+- **Adaptive learning**: Early stopping and model checkpointing
+
+### Safety Features
+- Input validation and clipping
+- NaN/Inf detection and handling
+- Graceful error handling
+- Comprehensive logging
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Import Errors**: 
+   - Ensure all dependencies are installed
+   - Check that llrflibs is properly installed
+   - Verify Python path configuration
+
+2. **NaN/Inf Values**: 
+   - Environment includes comprehensive safety checks
+   - If issues persist, check RF simulation parameters
+
+3. **Training Instability**:
+   - Use CPU device for more stable training
+   - Adjust learning rate or batch size
+   - Check reward scaling
+
+4. **Memory Issues**:
+   - Reduce number of parallel environments
+   - Decrease episode length
+   - Use smaller network architecture
+
+### Performance Optimization
+
+- **CPU vs GPU**: CPU is recommended for this MLP policy
+- **Parallel environments**: 4 environments provide good balance
+- **Episode length**: 32768 steps allow complete cavity dynamics
+- **Evaluation frequency**: Adjust based on training time
+
+## Future Improvements
+
+- [ ] Add noise models for more realistic simulation
+- [ ] Implement multi-objective optimization (stability + efficiency)
+- [ ] Add support for different cavity configurations
+- [ ] Implement transfer learning between different cavities
+- [ ] Add real-time control interface
+- [ ] Develop web-based monitoring dashboard
+
+## References
+
+- [Stable Baselines3 Documentation](https://stable-baselines3.readthedocs.io/)
+- [Gymnasium Documentation](https://gymnasium.farama.org/)
+- [PPO Paper](https://arxiv.org/abs/1707.06347)
+
+## License
+
+This project is part of the ML_Learning repository and follows the same licensing terms.
